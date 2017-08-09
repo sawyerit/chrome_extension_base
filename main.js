@@ -70,7 +70,7 @@ function buildJQL(callback) {
   var status = document.getElementById("statusSelect").value;
   var inStatusFor = document.getElementById("daysPast").value
   var fullCallbackUrl = callbackBase;
-  fullCallbackUrl += 'project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100';
+  fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`
   callback(fullCallbackUrl);
 }
 function createHTMLElementResult(response){
@@ -80,8 +80,19 @@ function createHTMLElementResult(response){
 // results.json in the "json_results" folder contains a sample of the API response
 // hint: you may run the application as well if you fix the bug. 
 // 
+ var list = document.createElement('ul');
+  for(var i = 0; i < response.issues.length; i++){
+    var url = response.issues[i].self;
+    var title = response.issues[i].fields.summary;
+    var status = response.issues[i].fields.status.name;
+    var item = document.createElement('li');
+    item.innerHTML = "<a href=' "+url+" '>"+title+"</a> Status: "+status;
+    list.appendChild(item);
 
-  return '<p>There may be results, but you must read the response and display them.</p>';
+  }
+  document.getElementById("status").innerHTML=list.outerHTML;
+  // return '<p>There may be results, but you must read the response and display them.</p>';
+  return document.getElementById("status").innerHTML;
   
 }
 
@@ -91,7 +102,7 @@ function domify(str){
   return dom.body.textContent;
 }
 
-function checkProjectExists(){
+async function checkLoggedIn(){
     try {
       return await make_request("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
     } catch (errorMessage) {
@@ -103,7 +114,7 @@ function checkProjectExists(){
 // Setup
 document.addEventListener('DOMContentLoaded', function() {
   // if logged in, setup listeners
-    checkProjectExists().then(function() {
+    checkLoggedIn().then(function() {
       //load saved options
       loadOptions();
 
