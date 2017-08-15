@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-
+"content_security_policy": "script-src 'self' https://ajax.googleapis.com; object-src 'self'",
   "name": "Second Life Ticket Browser",
   "description": "This extension wraps api calls to JIRA for gathering status and metrics",
   "version": "1.0",
