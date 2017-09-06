@@ -1,3 +1,7 @@
+import "../css/google-font"
+import "../css/normalize"
+import "../css/skeleton"
+
 // Saves options to chrome.storage
 function save_options() {
   var prj = document.getElementById('project').value;

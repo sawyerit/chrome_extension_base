@@ -6,13 +6,14 @@
   "version": "1.0",
   "options_page": "options.html",
   "browser_action": {
-    "default_icon": "images/favicon.png",
-    "default_popup": "main.html",
+    "default_icon": "favicon.png",
+    "default_popup": "popup.html",
     "default_title": "Metrics Activity for JIRA"
   },
   "permissions": [
     "activeTab",
     "https://jira.secondlife.com/",
     "storage"
-  ]
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
