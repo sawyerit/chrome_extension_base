@@ -1,4 +1,4 @@
-{
+export default `{
     "expand": "schema,names",
     "startAt": 0,
     "maxResults": 2,
@@ -59,4 +59,4 @@
             }
         }
     ]
-}
+}`
