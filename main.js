@@ -1,6 +1,6 @@
 function getJIRAFeed(callback, errorCallback){
     var user = document.getElementById("user").value;
-    if(user == undefined) return;
+    if(user === undefined) return;
     
     var url = "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+"+user+"&providers=issues";
     make_request(url, "").then(function(response) {
@@ -43,7 +43,7 @@ function make_request(url, responseType) {
       reject(Error("Network Error"));
     }
     req.onreadystatechange = function() { 
-      if(req.readyState == 4 && req.status == 401) { 
+      if(req.readyState === 4 && req.status === 401) { 
           reject("You must be logged in to JIRA to see this project.");
       }
     }
@@ -68,21 +68,23 @@ function buildJQL(callback) {
   var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
   var project = document.getElementById("project").value;
   var status = document.getElementById("statusSelect").value;
-  var inStatusFor = document.getElementById("daysPast").value
+  var inStatusFor = document.getElementById("daysPast").value || 0;
   var fullCallbackUrl = callbackBase;
-  fullCallbackUrl += 'project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100';
+  fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
   callback(fullCallbackUrl);
 }
 function createHTMLElementResult(response){
-
-// 
-// Create HTML output to display the search results.
-// results.json in the "json_results" folder contains a sample of the API response
-// hint: you may run the application as well if you fix the bug. 
-// 
-
-  return '<p>There may be results, but you must read the response and display them.</p>';
-  
+  // render result
+  var issues = response.issues;
+  var list = document.createElement('ul');
+  for (var index = 0; index < issues.length; index++) {
+    var summary = issues[index].fields.summary;
+    var status = issues[index].fields.status.name;
+    var item = document.createElement('li');
+    item.innerHTML = status + " - " + summary;
+    list.appendChild(item);
+  }
+  return list.outerHTML;
 }
 
 // utility 
@@ -91,7 +93,7 @@ function domify(str){
   return dom.body.textContent;
 }
 
-function checkProjectExists(){
+async function checkProjectExists(){
     try {
       return await make_request("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
     } catch (errorMessage) {
