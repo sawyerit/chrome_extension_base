@@ -1,8 +1,8 @@
 const getJIRAFeed = (callback, errorCallback) => {
-  let user = document.getElementById("user").value;
-  if(user == undefined) return;
-  let url = `https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+${user}&providers=issues`;
-  makeRequest(url, "").then((response) => {
+  let user = document.getElementById('user').value;
+  if(!user) return;
+  const url = `https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+${user}&providers=issues`;
+  makeRequest(url, '').then((response) => {
     // empty response type allows the request.responseXML property to be returned in the makeRequest call
     callback(url, response);
   }, errorCallback);
@@ -13,9 +13,9 @@ const getJIRAFeed = (callback, errorCallback) => {
  *   formatted for rendering.
  * @param {function(string)} errorCallback - Called when the query or call fails.
  */
-async function getQueryResults(s, callback, errorCallback) {    
+async function getQueryResults(searchUrl, callback, errorCallback) {    
   try {
-    const response = await makeRequest(s, "json");
+    const response = await makeRequest(searchUrl, 'json');
     callback(createHTMLElementResult(response));
   } catch (error) {
     errorCallback(error);
@@ -30,7 +30,7 @@ const makeRequest = (url, responseType) => {
 
     req.onload = () => {
       let response = responseType ? req.response : req.responseXML;
-      if(response && response.errorMessages && response.errorMessages.length > 0){
+      if(response && response.errorMessages && !response.errorMessages.length){
         reject(response.errorMessages[0]);
         return;
       }
@@ -39,11 +39,11 @@ const makeRequest = (url, responseType) => {
 
     // Handle network errors
     req.onerror = () => {
-      reject(Error("Network Error"));
+      reject(Error('Network Error'));
     }
     req.onreadystatechange = () => { 
-      if(req.readyState == 4 && req.status == 401) { 
-        reject("You must be logged in to JIRA to see this project.");
+      if(req.readyState === 4 && req.status === 401) { 
+        reject('You must be logged in to JIRA to see this project.');
       }
     }
 
@@ -57,16 +57,17 @@ const loadOptions = () => {
     project: 'Sunshine',
     user: 'nyx.linden'
   }, (items) => {
-    document.getElementById('project').value = items.project;
-    document.getElementById('user').value = items.user;
+    const { project, user } = items;
+    document.getElementById('project').value = project;
+    document.getElementById('user').value = user;
   });
 }
 
 const buildJQL = (callback) => {
-  const callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
-  let project = document.getElementById("project").value;
-  let status = document.getElementById("statusSelect").value;
-  let inStatusFor = document.getElementById("daysPast").value;
+  const callbackBase = 'https://jira.secondlife.com/rest/api/2/search?jql=';
+  let project = document.getElementById('project').value;
+  let status = document.getElementById('statusSelect').value;
+  let inStatusFor = document.getElementById('daysPast').value;
   let fullCallbackUrl = callbackBase;
   fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
   callback(fullCallbackUrl);
@@ -83,8 +84,8 @@ const createHTMLElementResult = (response) => {
       <article class='issue-container'>
         <h6><strong>ISSUE:</strong> ${summary}</h6>
         <p><strong>ISSUE ID:</strong> ${issue.id}</p>
-        <p><strong>STATUS:</strong> ${status.name} <img src="${status.iconUrl}"></p>
-        <p><strong>MORE INFO:</strong> <a href=${issue.self}  target="_blank">${issue.self}</a></p>
+        <p><strong>STATUS:</strong> ${status.name} <img src='${status.iconUrl}' alt='status icon'></p>
+        <p><strong>MORE INFO:</strong> <a href=${issue.self}  target='_blank'>${issue.self}</a></p>
         <p id='assignee'><strong>ASSIGNEE:</strong> ${assigned}</p>
       </article>
       `;
@@ -108,7 +109,7 @@ const domify = (str) => {
 
 async function checkProjectExists(){
     try {
-      return await makeRequest("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
+      return await makeRequest('https://jira.secondlife.com/rest/api/2/project/SUN', 'json');
     } catch (errorMessage) {
       document.getElementById('status').innerHTML = 'ERROR. ' + errorMessage;
       document.getElementById('status').hidden = false;
@@ -124,19 +125,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // query click handler
       
-      document.getElementById("query").onclick = () =>{
+      document.getElementById('query').onclick = () =>{
         // build query
         buildJQL((url) => {
           document.getElementById('status').innerHTML = 'Performing JIRA search for ' + url;
           document.getElementById('status').hidden = false;  
           // perform the search
-          getQueryResults(url, (return_val) => {
+          getQueryResults(url, (returnVal) => {
             // render the results
             document.getElementById('status').innerHTML = 'Query term: ' + url + '\n';
             document.getElementById('status').hidden = false;
             
             const jsonResultDiv = document.getElementById('query-result');
-            jsonResultDiv.innerHTML = return_val;
+            jsonResultDiv.innerHTML = returnVal;
             jsonResultDiv.hidden = false;
 
           }, (errorMessage) => {
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // activity feed click handler
-      document.getElementById("feed").onclick = () => {   
+      document.getElementById('feed').onclick = () => {   
         // get the xml feed
         getJIRAFeed((url, xmlDoc) => {
           document.getElementById('status').innerHTML = 'Activity query: ' + url + '\n';
@@ -155,19 +156,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // render result
           const feed = xmlDoc.getElementsByTagName('feed');
-          const entries = feed[0].getElementsByTagName("entry");
+          const entries = feed[0].getElementsByTagName('entry');
           const list = document.createElement('ul');
 
           for (let index = 0; index < entries.length; index++) {
-            const html = entries[index].getElementsByTagName("title")[0].innerHTML;
-            const updated = entries[index].getElementsByTagName("updated")[0].innerHTML;
+            const html = entries[index].getElementsByTagName('title')[0].innerHTML;
+            const updated = entries[index].getElementsByTagName('updated')[0].innerHTML;
             const item = document.createElement('li');
-            item.innerHTML = new Date(updated).toLocaleString() + " - " + domify(html);
+            item.innerHTML = new Date(updated).toLocaleString() + ' - ' + domify(html);
             list.appendChild(item);
           }
-
           const feedResultDiv = document.getElementById('query-result');
-          if(!list.childNodes.length){
+          if(list.childNodes.length){
             feedResultDiv.innerHTML = list.outerHTML;
           } else {
             document.getElementById('status').innerHTML = 'There are no activity results.';
