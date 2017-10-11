@@ -427,3 +427,7 @@ there.
   width: 100%;
   margin-bottom: 10px;
 }
+
+#assignee {
+  margin-bottom: 0;
+}
