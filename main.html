@@ -14,35 +14,58 @@
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="icon" type="image/png" href="images/favicon.png">
-  
+  <script src="lib/validate.min.js"></script>
+  <script src="form_validation.js"></script>
   <script src="main.js"></script>
 
 </head>
-<body>
+<body style="min-width: 800px; margin-top: 20px">
   <div class="container">
     <div class="row">
-      <div class="twelve columns" style="margin-top: 20%">
+      <div class="twelve columns">
         <h4>Search JIRA</h4>
+        <h5 id="error" style="color: red" hidden />
+      </div>
+    </div>
+    <div class="row">
+      <div class="seven columns">
         <h5>Ticket Status Query</h5>
-          <p>
-            <input type="search" placeholder="enter a project" id="project" />
-            <select id="statusSelect">
-              <option value="1">Open</option>
-              <option value="3">In Progress</option>
-            </select>
-            <label> for longer than <input type="number" id="daysPast" min="0" max="20" /> days</label>
-            <input type="submit" value="query" id="query" />
-            </p><hr /><p>
-            <h5>JIRA Activity Query</h5>
-            <input type="search" placeholder="enter a user" id="user" />
-            <input type="submit" value="get JIRA Activity" id="feed" />
-          </p>
+      </div>
+      <div class="five columns">
+        <h5>JIRA Activity Query</h5>
+      </div>
+    </div>
+    <div class="row">
+      <div class="seven columns">
+        <input class="u-full-width" type="search" placeholder="enter a project" id="project" tabindex="1"/>
+      </div>
+      <div class="five columns">
+        <input type="search" class="u-full-width" placeholder="enter a user" id="user" tabindex="6"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="three columns">
+        <select class="u-full-width" id="statusSelect" tabindex="2">
+          <option value="1">Open</option>
+          <option value="3">In Progress</option>
+        </select>
+      </div>
+      <div class="four columns">
+        <label>for longer than <input type="number" id="daysPast" min="0" max="20" value="0" tabindex="3"/> days</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="seven columns">
+        <input type="submit" class="u-full-width" value="Get Ticket Status" id="query" tabindex="4"/>
+      </div>
+      <div class="five columns">
+        <input type="submit" class="u-full-width" value="Get JIRA Activity" id="feed" tabindex="7" />
       </div>
     </div>
     <div class="row">
       <div class="twelve columns">
         <p><span id="status" hidden /></p>
-        <div id="query-result" hidden></div>
+        <div id="query-result" style="float: left;" hidden></div>
       </div>
     </div>
   </div>

@@ -1,29 +1,6 @@
-function getJIRAFeed(callback, errorCallback){
-    var user = document.getElementById("user").value;
-    if(user == undefined) return;
-    
-    var url = "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+"+user+"&providers=issues";
-    make_request(url, "").then(function(response) {
-      // empty response type allows the request.responseXML property to be returned in the makeRequest call
-      callback(url, response);
-    }, errorCallback);
-}
-/**
- * @param {string} searchTerm - Search term for JIRA Query.
- * @param {function(string)} callback - Called when the query results have been  
- *   formatted for rendering.
- * @param {function(string)} errorCallback - Called when the query or call fails.
- */
-async function getQueryResults(s, callback, errorCallback) {                                                 
-    try {
-      var response = await make_request(s, "json");
-      callback(createHTMLElementResult(response));
-    } catch (error) {
-      errorCallback(error);
-    }
-}
+/* global validateActivityQueryForm, validateTicketStatusForm, async, chrome */
 
-function make_request(url, responseType) {
+function makeRequest(url, responseType) {
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
     req.open('GET', url);
@@ -40,20 +17,58 @@ function make_request(url, responseType) {
 
     // Handle network errors
     req.onerror = function() {
-      reject(Error("Network Error"));
+      reject(Error('Network Error'));
     }
-    req.onreadystatechange = function() { 
-      if(req.readyState == 4 && req.status == 401) { 
-          reject("You must be logged in to JIRA to see this project.");
+    ;
+    req.onreadystatechange = function() {
+      if(req.readyState === 4 && req.status === 401) {
+          reject('You must be logged in to JIRA to see this project.');
       }
-    }
+    };
 
     // Make the request
     req.send();
   });
 }
 
+function createHTMLElementResult(response){
+// Create HTML output to display the search results.
+  var html = '';
+  for (var issue of response.issues) {
+    html += `${issue.key}</a> - <img src='${issue.fields.status.iconUrl}'>`;
+    html += ` ${issue.fields.status.name} - ${issue.fields.summary}<br>`;
+  }
+  return html;
 
+}
+
+async function getJIRAFeed(callback, errorCallback) {
+    var user = document.getElementById('user').value;
+    if(user === undefined) return;
+
+    var url = `https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+${user}` +
+      `&providers=issues`;
+    try {
+      var feedResult = await makeRequest(url, '');
+      callback(url, feedResult);
+    } catch (errorMessage) {
+      errorCallback(errorMessage);
+    }
+}
+/**
+ * @param {string} searchTerm - Search term for JIRA Query.
+ * @param {function(string)} callback - Called when the query results have been
+ *   formatted for rendering.
+ * @param {function(string)} errorCallback - Called when the query or call fails.
+ */
+async function getQueryResults(searchTerm, callback, errorCallback) {
+  try {
+    var queryResult = await makeRequest(searchTerm, 'json');
+    callback(createHTMLElementResult(queryResult));
+  } catch (errorMessage) {
+    errorCallback(errorMessage);
+  }
+}
 
 function loadOptions(){
   chrome.storage.sync.get({
@@ -64,36 +79,27 @@ function loadOptions(){
     document.getElementById('user').value = items.user;
   });
 }
+
 function buildJQL(callback) {
-  var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
-  var project = document.getElementById("project").value;
-  var status = document.getElementById("statusSelect").value;
-  var inStatusFor = document.getElementById("daysPast").value
-  var fullCallbackUrl = callbackBase;
-  fullCallbackUrl += 'project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100';
-  callback(fullCallbackUrl);
-}
-function createHTMLElementResult(response){
-
-// 
-// Create HTML output to display the search results.
-// results.json in the "json_results" folder contains a sample of the API response
-// hint: you may run the application as well if you fix the bug. 
-// 
-
-  return '<p>There may be results, but you must read the response and display them.</p>';
-  
+  var callbackBase = 'https://jira.secondlife.com/rest/api/2/search?jql=';
+  var project = document.getElementById('project').value;
+  var status = document.getElementById('statusSelect').value;
+  var inStatusFor = document.getElementById('daysPast').value;
+  var cbUrl = callbackBase;
+  cbUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}`;
+  cbUrl += `+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
+  callback(cbUrl);
 }
 
-// utility 
+// utility
 function domify(str){
   var dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
   return dom.body.textContent;
 }
 
-function checkProjectExists(){
+async function checkProjectExists(){
     try {
-      return await make_request("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
+      return await makeRequest('https://jira.secondlife.com/rest/api/2/project/SUN', 'json');
     } catch (errorMessage) {
       document.getElementById('status').innerHTML = 'ERROR. ' + errorMessage;
       document.getElementById('status').hidden = false;
@@ -101,26 +107,28 @@ function checkProjectExists(){
 }
 
 // Setup
+loadOptions();
+
 document.addEventListener('DOMContentLoaded', function() {
   // if logged in, setup listeners
     checkProjectExists().then(function() {
-      //load saved options
-      loadOptions();
-
       // query click handler
-      document.getElementById("query").onclick = function(){
+      document.getElementById('query').onclick = function(){
         // build query
+        if (!validateTicketStatusForm()) {
+          return;
+        }
         buildJQL(function(url) {
-          document.getElementById('status').innerHTML = 'Performing JIRA search for ' + url;
-          document.getElementById('status').hidden = false;  
+          document.getElementById('status').innerHTML = 'Retrieving ticket statuses...';
+          document.getElementById('status').hidden = false;
+          document.getElementById('query-result').innerHTML = '';
           // perform the search
-          getQueryResults(url, function(return_val) {
+          getQueryResults(url, function(returnVal) {
             // render the results
-            document.getElementById('status').innerHTML = 'Query term: ' + url + '\n';
-            document.getElementById('status').hidden = false;
-            
+            document.getElementById('status').hidden = true;
+
             var jsonResultDiv = document.getElementById('query-result');
-            jsonResultDiv.innerHTML = return_val;
+            jsonResultDiv.innerHTML = returnVal;
             jsonResultDiv.hidden = false;
 
           }, function(errorMessage) {
@@ -128,25 +136,31 @@ document.addEventListener('DOMContentLoaded', function() {
               document.getElementById('status').hidden = false;
           });
         });
-      }
+      };
 
       // activity feed click handler
-      document.getElementById("feed").onclick = function(){   
+      document.getElementById('feed').onclick = function(){
         // get the xml feed
+        if (!validateActivityQueryForm()) {
+          return;
+        }
+        document.getElementById('status').innerHTML = 'Loading results for user ' +
+          document.getElementById('user').value + '...';
+        document.getElementById('status').hidden = false;
+        document.getElementById('query-result').innerHTML = '';
         getJIRAFeed(function(url, xmlDoc) {
-          document.getElementById('status').innerHTML = 'Activity query: ' + url + '\n';
-          document.getElementById('status').hidden = false;
+          document.getElementById('status').hidden = true;
 
           // render result
           var feed = xmlDoc.getElementsByTagName('feed');
-          var entries = feed[0].getElementsByTagName("entry");
+          var entries = feed[0].getElementsByTagName('entry');
           var list = document.createElement('ul');
 
           for (var index = 0; index < entries.length; index++) {
-            var html = entries[index].getElementsByTagName("title")[0].innerHTML;
-            var updated = entries[index].getElementsByTagName("updated")[0].innerHTML;
+            var html = entries[index].getElementsByTagName('title')[0].innerHTML;
+            var updated = entries[index].getElementsByTagName('updated')[0].innerHTML;
             var item = document.createElement('li');
-            item.innerHTML = new Date(updated).toLocaleString() + " - " + domify(html);
+            item.innerHTML = new Date(updated).toLocaleString() + ' - ' + domify(html);
             list.appendChild(item);
           }
 
@@ -157,17 +171,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('status').innerHTML = 'There are no activity results.';
             document.getElementById('status').hidden = false;
           }
-          
+
           feedResultDiv.hidden = false;
 
         }, function(errorMessage) {
           document.getElementById('status').innerHTML = 'ERROR. ' + errorMessage;
           document.getElementById('status').hidden = false;
-        });    
-      };        
+        });
+      };
 
     }).catch(function(errorMessage) {
         document.getElementById('status').innerHTML = 'ERROR. ' + errorMessage;
         document.getElementById('status').hidden = false;
-    });   
+    });
 });
