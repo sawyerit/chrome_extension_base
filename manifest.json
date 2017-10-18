@@ -3,7 +3,7 @@
 
   "name": "Second Life Ticket Browser",
   "description": "This extension wraps api calls to JIRA for gathering status and metrics",
-  "version": "1.0",
+  "version": "1.0.1",
   "options_page": "options.html",
   "browser_action": {
     "default_icon": "images/favicon.png",

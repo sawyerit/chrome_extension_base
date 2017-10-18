@@ -1,5 +1,7 @@
+/* global chrome */
+
 // Saves options to chrome.storage
-function save_options() {
+function saveOptions() {
   var prj = document.getElementById('project').value;
   var usr = document.getElementById('user').value;
   chrome.storage.sync.set({
@@ -19,7 +21,7 @@ function save_options() {
 
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.
-function restore_options() {
+function restoreOptions() {
   chrome.storage.sync.get({
     project: 'Sunshine',
     user: 'nyx.linden'
@@ -28,6 +30,6 @@ function restore_options() {
     document.getElementById('user').value = items.user;
   });
 
-  document.getElementById('save').addEventListener('click', save_options);
+  document.getElementById('save').addEventListener('click', saveOptions);
 }
-document.addEventListener('DOMContentLoaded', restore_options);
+document.addEventListener('DOMContentLoaded', restoreOptions);
