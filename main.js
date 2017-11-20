@@ -1,6 +1,6 @@
-function getJIRAFeed(callback, errorCallback){
+function getJIRAFeed(callback, errorCallback) {
     var user = document.getElementById("user").value;
-    if(user == undefined) return;
+    if (user == undefined) return;
     
     var url = "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+"+user+"&providers=issues";
     make_request(url, "").then(function(response) {
@@ -8,6 +8,7 @@ function getJIRAFeed(callback, errorCallback){
       callback(url, response);
     }, errorCallback);
 }
+
 /**
  * @param {string} searchTerm - Search term for JIRA Query.
  * @param {function(string)} callback - Called when the query results have been  
@@ -31,7 +32,7 @@ function make_request(url, responseType) {
 
     req.onload = function() {
       var response = responseType ? req.response : req.responseXML;
-      if(response && response.errorMessages && response.errorMessages.length > 0){
+      if (response && response.errorMessages && response.errorMessages.length > 0){
         reject(response.errorMessages[0]);
         return;
       }
@@ -43,7 +44,7 @@ function make_request(url, responseType) {
       reject(Error("Network Error"));
     }
     req.onreadystatechange = function() { 
-      if(req.readyState == 4 && req.status == 401) { 
+      if (req.readyState == 4 && req.status == 401) { 
           reject("You must be logged in to JIRA to see this project.");
       }
     }
@@ -53,9 +54,7 @@ function make_request(url, responseType) {
   });
 }
 
-
-
-function loadOptions(){
+function loadOptions() {
   chrome.storage.sync.get({
     project: 'Sunshine',
     user: 'nyx.linden'
@@ -64,6 +63,7 @@ function loadOptions(){
     document.getElementById('user').value = items.user;
   });
 }
+
 function buildJQL(callback) {
   var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
   var project = document.getElementById("project").value;
@@ -73,6 +73,7 @@ function buildJQL(callback) {
   fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
   callback(fullCallbackUrl);
 }
+
 function createHTMLElementResult(response){
 
 // 
@@ -81,17 +82,20 @@ function createHTMLElementResult(response){
 // hint: you may run the application as well if you fix the bug. 
 // 
 
+  for (i = 0; i < response.t) {
+  //document.getElementById('query-result').innerHTML = 'Id: ' + x.
+  }
+
   return '<p>There may be results, but you must read the response and display them.</p>';
-  
 }
 
 // utility 
-function domify(str){
+function domify(str) {
   var dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
   return dom.body.textContent;
 }
 
-function checkProjectExists(){
+async function checkProjectExists() {
     try {
       return await make_request("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
     } catch (errorMessage) {
@@ -108,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
       loadOptions();
 
       // query click handler
-      document.getElementById("query").onclick = function(){
+      document.getElementById("query").onclick = function() {
         // build query
         buildJQL(function(url) {
           document.getElementById('status').innerHTML = 'Performing JIRA search for ' + url;
@@ -131,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // activity feed click handler
-      document.getElementById("feed").onclick = function(){   
+      document.getElementById("feed").onclick = function() {   
         // get the xml feed
         getJIRAFeed(function(url, xmlDoc) {
           document.getElementById('status').innerHTML = 'Activity query: ' + url + '\n';
