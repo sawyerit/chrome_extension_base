@@ -53,8 +53,6 @@ function make_request(url, responseType) {
   });
 }
 
-
-
 function loadOptions(){
   chrome.storage.sync.get({
     project: 'Sunshine',
@@ -81,8 +79,23 @@ function createHTMLElementResult(response){
 // hint: you may run the application as well if you fix the bug. 
 // 
 
-  return '<p>There may be results, but you must read the response and display them.</p>';
-  
+  var issues = response.issues;
+  var output = "";
+  var list = document.createElement('ul');
+  for (var index = 0; index < issues.length; index++) {
+    // retrieve data for each issue
+    var key = "<b>Key: " + issues[index].key + "</b><br/>";
+    var link = issues[index].self + "<br/>";
+    var summary = "Summary: " + issues[index].fields.summary + "<br/>";
+    var description = "Description: " + issues[index].fields.status.description + "<br/>";
+    var statusName = "Status: " + issues[index].fields.status.name + "<br/>";
+    var item = document.createElement('li');
+    //construct output
+    var output = key + link + summary + description + statusName;
+    item.innerHTML = output;
+    list.appendChild(item);
+  }
+  return list.outerHTML;
 }
 
 // utility 
@@ -91,7 +104,7 @@ function domify(str){
   return dom.body.textContent;
 }
 
-function checkProjectExists(){
+async function checkProjectExists(){
     try {
       return await make_request("https://jira.secondlife.com/rest/api/2/project/SUN", "json");
     } catch (errorMessage) {
