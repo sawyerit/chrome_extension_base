@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <title>JIRA Quick Search</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/normalize.css">
+  <link rel="stylesheet" href="../css/skeleton.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" type="image/png" href="../images/favicon.png">
+
+  <script src="../js/alerts.js"></script>
+  <script src="../js/fields.js"></script>
+  <script src="../js/tabs.js"></script>
+  <script src="../js/functions.js"></script>
+  <script src="../js/http.js"></script>
+  
+  <script src="../scripts/result-bindings.js"></script>
+  <script src="../scripts/main.js"></script>
+
+</head>
+<body>
+  <div class="container">
+
+    <!-- LOADING -->
+    <div id="loading-container" hidden>Loading...</div>
+
+    <!-- LOGO -->
+    <img src="../images/logo.png" class="logo-image">
+
+    <!-- ALERTS -->
+    <div id="alert-container"></div>
+
+    <!-- TABS -->
+    <div class="tab">
+      <button class="tablinks" id="tab-status">Ticket Status</button>
+      <button class="tablinks" id="tab-activity">Activity Query</button>
+    </div>
+    
+    <!-- TAB -->
+    <div id="tab-status" class="tabcontent open">
+        <label>Project name <span class="required">*</span></label>
+        <input type="search" placeholder="Project Name ..." id="project" />
+
+        <Label>Status</Label>
+        <select id="statusSelect">
+          <option value="Open">Open</option>
+          <option value="Reviewing">Reviewing</option>
+          <option value="&quot;In+Progress&quot;">In Progress</option>
+          <option value="&quot;In+QA&quot;">In QA</option>
+          <option value="Closed">Closed</option>
+          <option value="&quot;Needs+More+Info&quot;">Needs More Info</option>
+          <option value="&quot;Pending+Release&quot;">Pending Release</option>
+        </select>
+
+        <Label>Min # of days in status</Label>
+        <input type="number" id="daysPast" maxlength="5" min="0" max="10000" value="0" />
+        
+        <input type="submit" value="Query" id="tickets" /> 
+
+        <div id="query-result-tickets" hidden></div>
+    </div>
+    
+    <!-- TAB -->
+    <div id="tab-activity" class="tabcontent">
+        <label>User name <span class="required">*</span></label>
+        <input type="search" placeholder="Name..." id="user" />
+
+        <input type="submit" value="Query" id="activity" />
+
+        <div id="query-result-activity" hidden></div>
+    </div>
+
+  </div>
+</body>
+</html>
