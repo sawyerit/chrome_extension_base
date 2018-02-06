@@ -20,6 +20,7 @@
 - Code
 - Tables
 - Spacing
+- Tabs
 - Utilities
 - Clearing
 - Media Queries
@@ -234,7 +235,8 @@ input[type="url"],
 input[type="password"],
 textarea,
 select {
-  height: 38px;
+  display: inline-block;
+  width: 100%;
   padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
   background-color: #fff;
   border: 1px solid #D1D1D1;
@@ -359,6 +361,44 @@ form {
   margin-bottom: 2.5rem; }
 
 
+/* Tabs
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+.tab button {
+  background-color: inherit;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+  margin-bottom: auto;
+  line-height: normal;
+}
+
+.tab button:hover {
+  background-color: #ddd;
+}
+
+.tab button.active {
+  background-color: #ccc;
+}
+
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.tabcontent.open {
+  display: block;
+}
+
 /* Utilities
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .u-full-width {
@@ -376,7 +416,6 @@ form {
 /* Misc
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 hr {
-  margin-top: 3rem;
   margin-bottom: 3.5rem;
   border-width: 0;
   border-top: 1px solid #E1E1E1; }

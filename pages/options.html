@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <title>JIRA Quick Search</title>
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!-- Mobile Specific Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="../css/normalize.css">
+  <link rel="stylesheet" href="../css/skeleton.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="icon" type="image/png" href="../images/favicon.png">
+  
+  <script src="../js/alerts.js"></script>
+
+  <script src="../scripts/options.js"></script>
+
+</head>
+<body>
+  <div class="container">
+
+    <!-- LOADING -->
+    <div id="loading-container" hidden>Loading...</div>
+
+    <!-- LOGO -->
+    <img src="../images/logo.png" class="logo-image">
+
+    <!-- ALERTS -->
+    <div id="alert-container"></div>
+
+    <h4>JIRA Search Options</h4>
+    <p>
+      <label>Project name</label>
+      <input type="text" placeholder="Name..." id="project" />
+      
+      <label>User name</label>
+      <input type="text" placeholder="Name..." id="user" />
+
+      <button id="defaults">Defaults</button>
+      <button id="save">Save</button>
+    </p>
+
+  </div>
+</body>
+</html>
