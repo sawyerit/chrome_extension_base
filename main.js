@@ -56,9 +56,10 @@ async function statusQueryHandler () {
 	}
 }
 
-const activityFeedHandler = () => {
-	// get the xml feed
-	getJIRAFeed(function(url, xmlDoc) {
+async function activityFeedHandler() {
+	try {
+		// get the xml feed
+		const { url, response: xmlDoc } = await getJIRAFeed();
 		writeStatus('Activity query: ' + url + '\n');
   
 		// render result
@@ -80,10 +81,10 @@ const activityFeedHandler = () => {
 			writeStatus('There are no activity results.');
 		}
   
-	}, function(errorMessage) {
+	} catch(errorMessage) {
 		writeError('ERROR. ' + errorMessage);
-	});  
-};
+	}  
+}
 
 /**
  * @param {string} searchTerm - Search term for JIRA Query.
@@ -166,7 +167,7 @@ const getIssueStatus = (issue) => issue.fields.status.name;
 
 const getIssueAssignee = (issue) => (issue.fields.assignee ? issue.fields.assignee.displayName : '');
 
-async function getJIRAFeed (callback, errorCallback) {
+async function getJIRAFeed () {
 	const user = document.getElementById('user').value;
 	if(user == undefined) return;
 
@@ -175,10 +176,10 @@ async function getJIRAFeed (callback, errorCallback) {
 	try {
 		// empty response type allows the request.responseXML property to be returned in the makeRequest call
 		const response = await make_request(url, '');
-		callback(url, response);
+		return { url, response };
 	}
 	catch (error) {
-		errorCallback(error);
+		throw new Error(error);
 	}
 }
 
