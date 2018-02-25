@@ -1,8 +1,8 @@
 function getJIRAFeed(callback, errorCallback){
-    var user = document.getElementById("user").value;
+    const user = document.getElementById("user").value;
     if(user == undefined) return;
     
-    var url = "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+"+user+"&providers=issues";
+    const url = "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+"+user+"&providers=issues";
     make_request(url, "").then(function(response) {
       // empty response type allows the request.responseXML property to be returned in the makeRequest call
       callback(url, response);
@@ -16,7 +16,7 @@ function getJIRAFeed(callback, errorCallback){
  */
 async function getQueryResults(s, callback, errorCallback) {                                                 
     try {
-      var response = await make_request(s, "json");
+      const response = await make_request(s, "json");
       callback(createHTMLElementResult(response));
     } catch (error) {
       errorCallback(error);
@@ -25,12 +25,12 @@ async function getQueryResults(s, callback, errorCallback) {
 
 function make_request(url, responseType) {
   return new Promise(function(resolve, reject) {
-    var req = new XMLHttpRequest();
+    const req = new XMLHttpRequest();
     req.open('GET', url);
     req.responseType = responseType;
 
     req.onload = function() {
-      var response = responseType ? req.response : req.responseXML;
+      const response = responseType ? req.response : req.responseXML;
       if(response && response.errorMessages && response.errorMessages.length > 0){
         reject(response.errorMessages[0]);
         return;
@@ -65,33 +65,25 @@ function loadOptions(){
   });
 }
 function buildJQL(callback) {
-  var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
-  var project = document.getElementById("project").value;
-  var status = document.getElementById("statusSelect").value;
-  var inStatusFor = document.getElementById("daysPast").value
+  const callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
+  const project = document.getElementById("project").value;
+  const status = document.getElementById("statusSelect").value;
+  const inStatusFor = document.getElementById("daysPast").value
   if (!project || !status || !inStatusFor) {
 	writeError('Project and status and daysPast fields need values.');
 	return;
   } 
-  var fullCallbackUrl = callbackBase;
+  let fullCallbackUrl = callbackBase;
   fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
   callback(fullCallbackUrl);
 }
 function createHTMLElementResult(response){
-
-// 
-// Create HTML output to display the search results.
-// results.json in the "json_results" folder contains a sample of the API response
-// hint: you may run the application as well if you fix the bug. 
-// 
-
-  return '<p>There may be results, but you must read the response and display them.</p>';
-  
+	return tablifyJson(response);
 }
 
 // utility 
 function domify(str){
-  var dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
+  const dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
   return dom.body.textContent;
 }
 
@@ -121,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			// render the results
 			writeStatus('Query term: ' + url + '\n');
             
-            var jsonResultDiv = document.getElementById('query-result');
+            const jsonResultDiv = document.getElementById('query-result');
             jsonResultDiv.innerHTML = return_val;
             jsonResultDiv.hidden = false;
 
@@ -138,19 +130,19 @@ document.addEventListener('DOMContentLoaded', function() {
 		  writeStatus('Activity query: ' + url + '\n');
           
           // render result
-          var feed = xmlDoc.getElementsByTagName('feed');
-          var entries = feed[0].getElementsByTagName("entry");
-          var list = document.createElement('ul');
+          const feed = xmlDoc.getElementsByTagName('feed');
+          const entries = feed[0].getElementsByTagName("entry");
+          const list = document.createElement('ul');
 
-          for (var index = 0; index < entries.length; index++) {
-            var html = entries[index].getElementsByTagName("title")[0].innerHTML;
-            var updated = entries[index].getElementsByTagName("updated")[0].innerHTML;
-            var item = document.createElement('li');
+          for (let index = 0; index < entries.length; index++) {
+            const html = entries[index].getElementsByTagName("title")[0].innerHTML;
+            const updated = entries[index].getElementsByTagName("updated")[0].innerHTML;
+            const item = document.createElement('li');
             item.innerHTML = new Date(updated).toLocaleString() + " - " + domify(html);
             list.appendChild(item);
           }
 
-          var feedResultDiv = document.getElementById('query-result');
+          const feedResultDiv = document.getElementById('query-result');
           if(list.childNodes.length > 0){
             feedResultDiv.innerHTML = list.outerHTML;
           } else {
@@ -180,4 +172,59 @@ function writeStatus(msg) {
 	statusEle.innerText = msg;
 	statusEle.hidden = false;
 	return statusEle;
+}
+
+function tablifyJson (jsonResponse) {
+	const { issues } = jsonResponse;
+	// TODO: paginate issues using startAt, maxResults, total
+
+	const headers = Object.keys(issues[0].fields);
+	const table = makeSimpleTableWithHeader(headers);
+	
+	issues.forEach(issue => {
+		const row = document.createElement('tr');
+		headers.forEach(key => {
+			const column = document.createElement('td');
+			const text = getFieldValue(issue, key);
+			const textNode = document.createTextNode(text);
+			column.appendChild(textNode);
+			row.appendChild(column);
+			table.appendChild(row);
+		});
+	});
+	return table.outerHTML;
+}
+
+function makeSimpleTableWithHeader(headers) {
+	const table = document.createElement('table');
+	const headerRow = document.createElement('tr');
+
+	headers.forEach(key => {
+		const h1 = document.createElement('th');
+		const text = document.createTextNode(key);
+		h1.appendChild(text);
+		headerRow.appendChild(h1);
+	});
+	table.appendChild(headerRow);
+	return table;
+}
+
+function getFieldValue(issue, key) {
+	if (key === 'status') {
+		return getIssueStatus(issue);
+	}
+	else if (key === 'assignee') {
+		return getIssueAssignee(issue);
+	}
+	else {
+		return issue.fields[key];
+	}
+}
+
+function getIssueStatus(issue) {
+	return issue.fields.status.name;
+}
+
+function getIssueAssignee(issue) {
+	return (issue.fields.assignee ? issue.fields.assignee.displayName : '');
 }
