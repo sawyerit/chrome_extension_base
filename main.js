@@ -75,7 +75,6 @@ const activityFeedHandler = () => {
 			writeResults(list.outerHTML);
 		} else {
 			writeStatus('There are no activity results.');
-			emptyResults();
 		}
   
 	}, function(errorMessage) {
@@ -237,7 +236,6 @@ const emptyResults = () => {
 const writeError = (msg) => {
 	const statusEle = writeStatus(msg);
 	statusEle.style.color = 'red';
-	emptyResults();
 	return statusEle;
 };
 
@@ -246,5 +244,6 @@ const writeStatus = (msg) => {
 	statusEle.innerText = msg;
 	statusEle.hidden = false;
 	statusEle.style.color = 'black';
+	emptyResults();
 	return statusEle;
 };
