@@ -1,60 +1,28 @@
-async function getJIRAFeed(callback, errorCallback){
-	const user = document.getElementById('user').value;
-	if(user == undefined) return;
-    
-	const url = 'https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+'+user+'&providers=issues';
+// Setup
+document.addEventListener('DOMContentLoaded', async function() {
 	try {
-		// empty response type allows the request.responseXML property to be returned in the makeRequest call
-		const response = await make_request(url, '');
-		callback(url, response);
-	}
-	catch (error) {
-		errorCallback(error);
-	}
-}
-/**
- * @param {string} searchTerm - Search term for JIRA Query.
- * @param {function(string)} callback - Called when the query results have been  
- *   formatted for rendering.
- * @param {function(string)} errorCallback - Called when the query or call fails.
- */
-async function getQueryResults(s, callback, errorCallback) {                                                 
+		// if logged in, setup listeners
+		await checkProjectExists();
+		//load saved options
+		await loadOptions();
+
+		// query click handler
+		document.getElementById('query').onclick = statusQueryHandler;
+
+		// activity feed click handler
+		document.getElementById('feed').onclick = activityFeedHandler;        
+
+	} catch(error) {
+		writeError('ERROR. ' + errorMessage);
+	}   
+});
+
+async function checkProjectExists(){
 	try {
-		const response = await make_request(s, 'json');
-		callback(createHTMLElementResult(response));
-	} catch (error) {
-		errorCallback(error);
+		return await make_request('https://jira.secondlife.com/rest/api/2/project/SUN', 'json');
+	} catch (errorMessage) {
+		writeError('ERROR. ' + errorMessage);
 	}
-}
-
-function make_request(url, responseType) {
-	return new Promise(function(resolve, reject) {
-		const req = new XMLHttpRequest();
-		req.open('GET', url);
-		req.responseType = responseType;
-
-		req.onload = function() {
-			const response = responseType ? req.response : req.responseXML;
-			if(response && response.errorMessages && response.errorMessages.length > 0){
-				reject(response.errorMessages[0]);
-				return;
-			}
-			resolve(response);
-		};
-
-		// Handle network errors
-		req.onerror = function() {
-			reject(Error('Network Error'));
-		};
-		req.onreadystatechange = function() { 
-			if(req.readyState == 4 && req.status == 401) { 
-				reject('You must be logged in to JIRA to see this project.');
-			}
-		};
-
-		// Make the request
-		req.send();
-	});
 }
 
 function loadOptions(){
@@ -65,38 +33,6 @@ function loadOptions(){
 		document.getElementById('project').value = items.project;
 		document.getElementById('user').value = items.user;
 	});
-}
-
-function buildJQL(callback) {
-	const callbackBase = 'https://jira.secondlife.com/rest/api/2/search?jql=';
-	const project = document.getElementById('project').value;
-	const status = document.getElementById('statusSelect').value;
-	const inStatusFor = document.getElementById('daysPast').value;
-	if (!project || !status || !inStatusFor) {
-		writeError('Project and status and daysPast fields need values.');
-		return;
-	} 
-	let fullCallbackUrl = callbackBase;
-	fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
-	callback(fullCallbackUrl);
-}
-
-function createHTMLElementResult(response){
-	return tablifyJson(response);
-}
-
-// utility 
-function domify(str){
-	const dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
-	return dom.body.textContent;
-}
-
-async function checkProjectExists(){
-	try {
-		return await make_request('https://jira.secondlife.com/rest/api/2/project/SUN', 'json');
-	} catch (errorMessage) {
-		writeError('ERROR. ' + errorMessage);
-	}
 }
 
 const statusQueryHandler = () => {
@@ -151,25 +87,38 @@ const activityFeedHandler = () => {
 	});  
 };
 
-// Setup
-document.addEventListener('DOMContentLoaded', async function() {
+/**
+ * @param {string} searchTerm - Search term for JIRA Query.
+ * @param {function(string)} callback - Called when the query results have been  
+ *   formatted for rendering.
+ * @param {function(string)} errorCallback - Called when the query or call fails.
+ */
+async function getQueryResults(s, callback, errorCallback) {                                                 
 	try {
-		// if logged in, setup listeners
-		await checkProjectExists();
-		//load saved options
-		await loadOptions();
+		const response = await make_request(s, 'json');
+		callback(createHTMLElementResult(response));
+	} catch (error) {
+		errorCallback(error);
+	}
+}
 
-		// query click handler
-		document.getElementById('query').onclick = statusQueryHandler;
+function buildJQL(callback) {
+	const callbackBase = 'https://jira.secondlife.com/rest/api/2/search?jql=';
+	const project = document.getElementById('project').value;
+	const status = document.getElementById('statusSelect').value;
+	const inStatusFor = document.getElementById('daysPast').value;
+	if (!project || !status || !inStatusFor) {
+		writeError('Project and status and daysPast fields need values.');
+		return;
+	} 
+	let fullCallbackUrl = callbackBase;
+	fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
+	callback(fullCallbackUrl);
+}
 
-		// activity feed click handler
-		document.getElementById('feed').onclick = activityFeedHandler;        
-
-	} catch(error) {
-		writeError('ERROR. ' + errorMessage);
-	}   
-});
-
+function createHTMLElementResult(response){
+	return tablifyJson(response);
+}
 
 const tablifyJson = (jsonResponse) => {
 	const { issues } = jsonResponse;
@@ -225,6 +174,57 @@ const getIssueStatus = (issue) => {
 const getIssueAssignee = (issue) => {
 	return (issue.fields.assignee ? issue.fields.assignee.displayName : '');
 };
+
+async function getJIRAFeed(callback, errorCallback){
+	const user = document.getElementById('user').value;
+	if(user == undefined) return;
+    
+	const url = 'https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+'+user+'&providers=issues';
+	try {
+		// empty response type allows the request.responseXML property to be returned in the makeRequest call
+		const response = await make_request(url, '');
+		callback(url, response);
+	}
+	catch (error) {
+		errorCallback(error);
+	}
+}
+
+// utility
+function make_request(url, responseType) {
+	return new Promise(function(resolve, reject) {
+		const req = new XMLHttpRequest();
+		req.open('GET', url);
+		req.responseType = responseType;
+
+		req.onload = function() {
+			const response = responseType ? req.response : req.responseXML;
+			if(response && response.errorMessages && response.errorMessages.length > 0){
+				reject(response.errorMessages[0]);
+				return;
+			}
+			resolve(response);
+		};
+
+		// Handle network errors
+		req.onerror = function() {
+			reject(Error('Network Error'));
+		};
+		req.onreadystatechange = function() { 
+			if(req.readyState == 4 && req.status == 401) { 
+				reject('You must be logged in to JIRA to see this project.');
+			}
+		};
+
+		// Make the request
+		req.send();
+	});
+}
+ 
+function domify(str){
+	const dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
+	return dom.body.textContent;
+}
 
 const writeError = (msg) => {
 	const statusEle = writeStatus(msg);
