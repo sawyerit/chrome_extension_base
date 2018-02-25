@@ -45,9 +45,7 @@ const statusQueryHandler = () => {
 			// render the results
 			writeStatus('Query term: ' + url + '\n');
 	
-			const jsonResultDiv = document.getElementById('query-result');
-			jsonResultDiv.innerHTML = return_val;
-			jsonResultDiv.hidden = false;
+			writeResults(return_val);
 
 		}, function(errorMessage) {
 			writeError('ERROR. ' + errorMessage);
@@ -73,15 +71,13 @@ const activityFeedHandler = () => {
 			list.appendChild(item);
 		}
 
-		const feedResultDiv = document.getElementById('query-result');
 		if(list.childNodes.length > 0){
-			feedResultDiv.innerHTML = list.outerHTML;
+			writeResults(list.outerHTML);
 		} else {
 			writeStatus('There are no activity results.');
+			emptyResults();
 		}
   
-		feedResultDiv.hidden = false;
-
 	}, function(errorMessage) {
 		writeError('ERROR. ' + errorMessage);
 	});  
@@ -226,9 +222,22 @@ function domify(str){
 	return dom.body.textContent;
 }
 
+const writeResults = (results) => {
+	const resultDiv = document.getElementById('query-result');
+	resultDiv.innerHTML = results;
+	resultDiv.hidden = false;
+};
+
+const emptyResults = () => {
+	const resultDiv = document.getElementById('query-result');
+	resultDiv.innerText = '';
+	resultDiv.hidden = true;
+};
+
 const writeError = (msg) => {
 	const statusEle = writeStatus(msg);
 	statusEle.style.color = 'red';
+	emptyResults();
 	return statusEle;
 };
 
@@ -236,5 +245,6 @@ const writeStatus = (msg) => {
 	const statusEle = document.getElementById('status');
 	statusEle.innerText = msg;
 	statusEle.hidden = false;
+	statusEle.style.color = 'black';
 	return statusEle;
 };
