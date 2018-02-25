@@ -1,3 +1,7 @@
+const STATUS_BASE_URL = `https://jira.secondlife.com/rest/api/2/search?jql=`;
+const PROJECT_URL = `https://jira.secondlife.com/rest/api/2/project/SUN`;
+const FEED_BASE_URL = `https://jira.secondlife.com/activity?maxResults=50`;
+
 // Setup
 document.addEventListener('DOMContentLoaded', async function() {
 	try {
@@ -12,14 +16,14 @@ document.addEventListener('DOMContentLoaded', async function() {
 		// activity feed click handler
 		document.getElementById('feed').onclick = activityFeedHandler;        
 
-	} catch(error) {
+	} catch(errorMessage) {
 		writeError('ERROR. ' + errorMessage);
 	}   
 });
 
 async function checkProjectExists(){
 	try {
-		return await make_request('https://jira.secondlife.com/rest/api/2/project/SUN', 'json');
+		return await make_request(PROJECT_URL, 'json');
 	} catch (errorMessage) {
 		writeError('ERROR. ' + errorMessage);
 	}
@@ -35,23 +39,22 @@ function loadOptions(){
 	});
 }
 
-const statusQueryHandler = () => {
+async function statusQueryHandler () {
 	// build query
-	buildJQL(function(url) {
-		writeStatus('Performing JIRA search for ' + url);
+	const url = buildJQL(STATUS_BASE_URL);
+	writeStatus('Performing JIRA search for ' + url);
 
+	try {
 		// perform the search
-		getQueryResults(url, function(return_val) {
-			// render the results
-			writeStatus('Query term: ' + url + '\n');
-	
-			writeResults(return_val);
+		const return_val = await getQueryResults(url);
+		// render the results
+		writeStatus('Query term: ' + url + '\n');
+		writeResults(return_val);
 
-		}, function(errorMessage) {
-			writeError('ERROR. ' + errorMessage);
-		});
-	});
-};
+	} catch(errorMessage) {
+		writeError('ERROR. ' + errorMessage);
+	}
+}
 
 const activityFeedHandler = () => {
 	// get the xml feed
@@ -88,17 +91,16 @@ const activityFeedHandler = () => {
  *   formatted for rendering.
  * @param {function(string)} errorCallback - Called when the query or call fails.
  */
-async function getQueryResults(s, callback, errorCallback) {                                                 
+async function getQueryResults(s) {                                                 
 	try {
 		const response = await make_request(s, 'json');
-		callback(createHTMLElementResult(response));
+		return createHTMLElementResult(response);
 	} catch (error) {
-		errorCallback(error);
+		throw new Error(error);
 	}
 }
 
-function buildJQL(callback) {
-	const callbackBase = 'https://jira.secondlife.com/rest/api/2/search?jql=';
+const buildJQL = (callbackBase) => {
 	const project = document.getElementById('project').value;
 	const status = document.getElementById('statusSelect').value;
 	const inStatusFor = document.getElementById('daysPast').value;
@@ -108,12 +110,10 @@ function buildJQL(callback) {
 	} 
 	let fullCallbackUrl = callbackBase;
 	fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
-	callback(fullCallbackUrl);
-}
+	return fullCallbackUrl;
+};
 
-function createHTMLElementResult(response){
-	return tablifyJson(response);
-}
+const createHTMLElementResult = (response) => tablifyJson(response);
 
 const tablifyJson = (jsonResponse) => {
 	const { issues } = jsonResponse;
@@ -162,19 +162,16 @@ const getFieldValue = (issue, key) => {
 	}
 };
 
-const getIssueStatus = (issue) => {
-	return issue.fields.status.name;
-};
+const getIssueStatus = (issue) => issue.fields.status.name;
 
-const getIssueAssignee = (issue) => {
-	return (issue.fields.assignee ? issue.fields.assignee.displayName : '');
-};
+const getIssueAssignee = (issue) => (issue.fields.assignee ? issue.fields.assignee.displayName : '');
 
-async function getJIRAFeed(callback, errorCallback){
+async function getJIRAFeed (callback, errorCallback) {
 	const user = document.getElementById('user').value;
 	if(user == undefined) return;
+
+	const url = addUserToUrl(FEED_BASE_URL, user);
     
-	const url = 'https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+'+user+'&providers=issues';
 	try {
 		// empty response type allows the request.responseXML property to be returned in the makeRequest call
 		const response = await make_request(url, '');
@@ -184,6 +181,8 @@ async function getJIRAFeed(callback, errorCallback){
 		errorCallback(error);
 	}
 }
+
+const addUserToUrl = (url, user) => url + `&streams=user+IS+${user}&providers=issues`;
 
 // utility
 function make_request(url, responseType) {
@@ -215,7 +214,7 @@ function make_request(url, responseType) {
 		req.send();
 	});
 }
- 
+
 function domify(str){
 	const dom = (new DOMParser()).parseFromString('<!doctype html><body>' + str,'text/html');
 	return dom.body.textContent;
