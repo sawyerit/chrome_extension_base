@@ -63,13 +63,13 @@ const activityFeedHandler = () => {
 		const entries = feed[0].getElementsByTagName('entry');
 		const list = document.createElement('ul');
 
-		for (let index = 0; index < entries.length; index++) {
-			const html = entries[index].getElementsByTagName('title')[0].innerHTML;
-			const updated = entries[index].getElementsByTagName('updated')[0].innerHTML;
+		[...entries].forEach(entry => {
+			const html = entry.getElementsByTagName('title')[0].innerHTML;
+			const updated = entry.getElementsByTagName('updated')[0].innerHTML;
 			const item = document.createElement('li');
 			item.innerHTML = new Date(updated).toLocaleString() + ' - ' + domify(html);
 			list.appendChild(item);
-		}
+		});
 
 		if(list.childNodes.length > 0){
 			writeResults(list.outerHTML);
