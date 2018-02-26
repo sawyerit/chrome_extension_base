@@ -1,0 +1,17 @@
+body {
+	min-width: 800px;
+}
+
+td {
+	max-width: 520px;
+	overflow-x: auto;
+}
+
+li {
+	max-width: 760px;
+	overflow-x: auto;
+}
+
+.twelve.columns p {
+	word-break: break-all;
+}
