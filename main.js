@@ -35,6 +35,7 @@ app.controller('MainCtrl', ['$http','$log','NgTableParams',
  
       self.get_tickets = function() {
     	  self.search_url = "https://jira.secondlife.com/rest/api/2/search";
+    	  self.issues = [];
     	  $http.get(self.search_url, {
     		    params: { jql: "project="+self.project_name +
     		    	" and status in ('"+self.status_select+"')" + 
