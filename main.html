@@ -1,50 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="mobileApp"> 
 <head>
-
-  <meta charset="utf-8">
-  <title>JIRA Quick Search</title>
-  <meta name="description" content="">
-  <meta name="author" content="">
-
-  <!-- Mobile Specific Metas -->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/skeleton.css">
-  <link rel="icon" type="image/png" href="images/favicon.png">
-  
-  <script src="main.js"></script>
-
-</head>
-<body>
+	<meta charset="utf-8">
+	<title>JIRA Quick Search</title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+	
+	<!-- Mobile Specific Metas -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/skeleton.css">
+	<link rel="icon" type="image/png" href="images/favicon.png">
+	<link rel="stylesheet" href="ng-table.min.css">
+	
+	<script src="angular.min.js"></script>
+	<script src="angular-resource.min.js"></script>
+	<script src="ng-table.min.js"></script>
+	<script src="xml2json.min.js"></script>
+	<script src="angular-sanitize.min.js"></script>
+	<script src="main.js"></script>
+</head> 
+     
+<body ng-controller="MainCtrl as ctrl">
   <div class="container">
     <div class="row">
       <div class="twelve columns" style="margin-top: 20%">
         <h4>Search JIRA</h4>
-        <h5>Ticket Status Query</h5>
-          <p>
-            <input type="search" placeholder="enter a project" id="project" />
-            <select id="statusSelect">
-              <option value="1">Open</option>
-              <option value="3">In Progress</option>
-            </select>
-            <label> for longer than <input type="number" id="daysPast" min="0" max="20" /> days</label>
-            <input type="submit" value="query" id="query" />
-            </p><hr /><p>
-            <h5>JIRA Activity Query</h5>
-            <input type="search" placeholder="enter a user" id="user" />
-            <input type="submit" value="get JIRA Activity" id="feed" />
+        <h5>Ticket Status Query</h5> 
+          <p>                    	
+            <div ng-init="ctrl.status_select = 'Open'">
+            	<input type="search" placeholder="enter a project" ng-model="ctrl.project_name"/>
+				<select ng-model="ctrl.status_select">
+					<option value="Open">Open</option>
+					<option value="In Progress">In Progress</option>
+				</select>
+			</div>			 
+            <label> for longer than <input type="number" ng-model="ctrl.days_past" min="0" max="20"/> days</label>
+            <button ng-click="ctrl.get_tickets()" ng-disabled="ctrl.loaded">Query</button>
           </p>
-      </div>
-    </div>
-    <div class="row">
-      <div class="twelve columns">
-        <p><span id="status" hidden /></p>
-        <div id="query-result" hidden></div>
-      </div>
-    </div>
-  </div>
-</body>
+          <div loading-container="demo.tableParams.settings().$loading">
+	          <table ng-table ="ctrl.tableParams" class="table table-condensed table-bordered table-striped" ng-show="ctrl.tableParams">
+	          	<tr ng-repeat="issue in ctrl.issues">			
+	          		<td data-title="'Id'">{{issue.id}}</td>	 
+					<td data-title="'Status'">{{issue.status}}</td>		
+					<td data-title="'Key'">{{issue.key}}</td>	
+					<td data-title="'Assignee'">{{issue.assignee}}</td>			
+					<td data-title="'Summary'" class="text-left" header-class="'text-left'">{{issue.summary}}</td> 			
+			    </tr> 			
+			  </table>
+		  </div>
+		  <span ng-model="ctrl.status" ng-show="ctrl.status">{{ctrl.status}}</span> 
+          <p>
+          <div ng-controller="FeedCtrl as ctrl2">  
+            <h5>JIRA Activity Query</h5>
+            <input type="search" placeholder="enter a user" ng-model="ctrl2.user_id"/>
+            <button ng-click="ctrl2.get_jira_activity()">get JIRA Activity</button>    
+            </ul>
+            <div class="row-fluid"> 
+	            <ul>
+	            	<li ng-repeat="entry in ctrl2.feeds | filter:filterText"> 
+	                    	<span class="small"><element ng-bind-html="entry.title"/></span> 
+	                    	(<span class="small"><element ng-bind-html="ctrl2.get_local_date(entry.updated)"/></span>)
+	                </li>                   
+	            </ul>               
+	        </div>  
+	        <span ng-show="ctrl2.status">{{ctrl2.status}}</span>  
+         </div>
+	</body>
 </html>
