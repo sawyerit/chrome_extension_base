@@ -54,8 +54,9 @@ app.controller('MainCtrl', ['$http','$log','NgTableParams',
     	    				  self.tickets.issues[i].fields.assignee.name:''), 
     	    		  summary: self.tickets.issues[i].fields.summary});  
     	      }
-    		  // Pagination
-    		  var initialParams = {
+    		  // Disabled pagination because it's not rendering properly
+    		  // in the extentsion. 
+    		  /*var initialParams = {
 		        count: 10 // initial page size
 		      };
 		      var initialSettings = {
@@ -64,7 +65,8 @@ app.controller('MainCtrl', ['$http','$log','NgTableParams',
 		        paginationMinBlocks: 2,
 		        dataset: self.issues
 		      };
-		      self.tableParams = new NgTableParams(initialParams, initialSettings);
+		      self.tableParams = new NgTableParams(initialParams, initialSettings);*/
+    		  self.tableParams = self.issues;
     		 
     	  }, function(errResponse) {	    	  
     		  self.status="Network Error!";
