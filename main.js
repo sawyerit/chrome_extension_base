@@ -1,16 +1,15 @@
-function getJIRAFeed(callback, errorCallback) {
-  var user = document.getElementById("user").value;
-  if (user == undefined) return;
+const getJIRAFeed = (callback, errorCallback) => {
+  if (document.getElementById("user").value == undefined) return;
 
   var url =
     "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+" +
-    user +
+    document.getElementById("user").value +
     "&providers=issues";
-  make_request(url, "").then(function(response) {
+  make_request(url, "").then(response => {
     // empty response type allows the request.responseXML property to be returned in the makeRequest call
     callback(url, response);
   }, errorCallback);
-}
+};
 
 /**
  * @param {string} searchTerm - Search term for JIRA Query.
@@ -28,13 +27,13 @@ async function getQueryResults(s, callback, errorCallback) {
   }
 }
 
-function make_request(url, responseType) {
-  return new Promise(function(resolve, reject) {
+const make_request = (url, responseType) => {
+  return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
     req.open("GET", url);
     req.responseType = responseType;
 
-    req.onload = function() {
+    req.onload = () => {
       var response = responseType ? req.response : req.responseXML;
       if (
         response &&
@@ -48,10 +47,10 @@ function make_request(url, responseType) {
     };
 
     // Handle network errors
-    req.onerror = function() {
+    req.onerror = () => {
       reject(Error("Network Error"));
     };
-    req.onreadystatechange = function() {
+    req.onreadystatechange = () => {
       if (req.readyState == 4 && req.status == 401) {
         reject("You must be logged in to JIRA to see this project.");
       }
@@ -60,30 +59,32 @@ function make_request(url, responseType) {
     // Make the request
     req.send();
   });
-}
+};
 
-function loadOptions() {
+const loadOptions = () => {
   chrome.storage.sync.get(
     {
       project: "Sunshine",
       user: "nyx.linden"
     },
-    function(items) {
+    items => {
       document.getElementById("project").value = items.project;
       document.getElementById("user").value = items.user;
     }
   );
-}
+};
 
-function buildJQL(callback) {
+const buildJQL = callback => {
   var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
   var project = document.getElementById("project").value;
   var status = document.getElementById("statusSelect").value;
   var inStatusFor = document.getElementById("daysPast").value;
   var fullCallbackUrl = callbackBase;
-  fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
+  fullCallbackUrl += `project=${
+    document.getElementById("project").value
+  }+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
   callback(fullCallbackUrl);
-}
+};
 
 function createHTMLElementResult(response) {
   var issues = response["issues"];
@@ -105,14 +106,15 @@ function createHTMLElementResult(response) {
 }
 
 // utility
-function domify(str) {
+const domify = str => {
   var dom = new DOMParser().parseFromString(
     "<!doctype html><body>" + str,
     "text/html"
   );
   return dom.body.textContent;
-}
+};
 
+var status = document.getElementById("status");
 async function checkProjectExists() {
   try {
     var result = await make_request(
@@ -121,56 +123,52 @@ async function checkProjectExists() {
     );
     return result;
   } catch (errorMessage) {
-    document.getElementById("status").innerHTML = "ERROR. " + errorMessage;
-    document.getElementById("status").hidden = false;
+    status.innerHTML = "ERROR. " + errorMessage;
+    status.hidden = false;
   }
 }
 
 // Setup
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", () => {
   // if logged in, setup listeners
   checkProjectExists()
-    .then(function() {
+    .then(() => {
       //load saved options
       loadOptions();
 
       // query click handler
-      document.getElementById("query").onclick = function() {
+      document.getElementById("query").onclick = () => {
         // build query
-        buildJQL(function(url) {
-          document.getElementById("status").innerHTML =
-            "Performing JIRA search for " + url;
-          document.getElementById("status").hidden = false;
+        buildJQL(url => {
+          status.innerHTML = "Performing JIRA search for " + url;
+          status.hidden = false;
           // perform the search
           getQueryResults(
             url,
-            function(return_val) {
+            return_val => {
               // render the results
-              document.getElementById("status").innerHTML =
-                "Query term: " + url + "\n";
-              document.getElementById("status").hidden = false;
+              status.innerHTML = "Query term: " + url + "\n";
+              status.hidden = false;
 
               var jsonResultDiv = document.getElementById("query-result");
               jsonResultDiv.innerHTML = return_val;
               jsonResultDiv.hidden = false;
             },
-            function(errorMessage) {
-              document.getElementById("status").innerHTML =
-                "ERROR. " + errorMessage;
-              document.getElementById("status").hidden = false;
+            errorMessage => {
+              status.innerHTML = "ERROR. " + errorMessage;
+              status.hidden = false;
             }
           );
         });
       };
 
       // activity feed click handler
-      document.getElementById("feed").onclick = function() {
+      document.getElementById("feed").onclick = () => {
         // get the xml feed
         getJIRAFeed(
-          function(url, xmlDoc) {
-            document.getElementById("status").innerHTML =
-              "Activity query: " + url + "\n";
-            document.getElementById("status").hidden = false;
+          (url, xmlDoc) => {
+            status.innerHTML = "Activity query: " + url + "\n";
+            status.hidden = false;
 
             // render result
             var feed = xmlDoc.getElementsByTagName("feed");
@@ -192,23 +190,21 @@ document.addEventListener("DOMContentLoaded", function() {
             if (list.childNodes.length > 0) {
               feedResultDiv.innerHTML = list.outerHTML;
             } else {
-              document.getElementById("status").innerHTML =
-                "There are no activity results.";
-              document.getElementById("status").hidden = false;
+              status.innerHTML = "There are no activity results.";
+              status.hidden = false;
             }
 
             feedResultDiv.hidden = false;
           },
-          function(errorMessage) {
-            document.getElementById("status").innerHTML =
-              "ERROR. " + errorMessage;
-            document.getElementById("status").hidden = false;
+          errorMessage => {
+            status.innerHTML = "ERROR. " + errorMessage;
+            status.hidden = false;
           }
         );
       };
     })
     .catch(function(errorMessage) {
-      document.getElementById("status").innerHTML = "ERROR. " + errorMessage;
-      document.getElementById("status").hidden = false;
+      status.innerHTML = "ERROR. " + errorMessage;
+      status.hidden = false;
     });
 });
