@@ -92,21 +92,19 @@ const buildJQL = callback => {
 
 function createHTMLElementResult(response) {
   var issues = response["issues"];
+  var count = response["total"];
   var results = issues.map(issue => {
     return (
       "<div class='card'><div class='card-container'>" +
+      `<h6>ID: ${issue["id"]} | Key: ${issue["key"]}</h6>` +
+      `<img src='${issue["fields"]["status"]["iconUrl"]}' /> ` +
       issue["fields"]["status"]["name"] +
       ": " +
       issue["fields"]["summary"] +
       "</div></div><br/>"
     );
   });
-  return results.join("");
-  //
-  // Create HTML output to display the search results.
-  // results.json in the "json_results" folder contains a sample of the API response
-  // hint: you may run the application as well if you fix the bug.
-  //
+  return `<h5>Total Count: ${count}<br/></h5>` + results.join("");
 }
 
 // utility
