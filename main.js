@@ -1,9 +1,13 @@
+const element = id => {
+  return document.getElementById(id);
+};
+
 const getJIRAFeed = (callback, errorCallback) => {
-  if (document.getElementById("user").value == undefined) return;
+  if (element("user").value == undefined) return;
 
   var url =
     "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+" +
-    document.getElementById("user").value +
+    element("user").value +
     "&providers=issues";
   make_request(url, "").then(response => {
     // empty response type allows the request.responseXML property to be returned in the makeRequest call
@@ -68,17 +72,17 @@ const loadOptions = () => {
       user: "nyx.linden"
     },
     items => {
-      document.getElementById("project").value = items.project;
-      document.getElementById("user").value = items.user;
+      element("project").value = items.project;
+      element("user").value = items.user;
     }
   );
 };
 
 const buildJQL = callback => {
   var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
-  var project = document.getElementById("project").value;
-  var status = document.getElementById("statusSelect").value;
-  var inStatusFor = document.getElementById("daysPast").value;
+  var project = element("project").value;
+  var status = element("statusSelect").value;
+  var inStatusFor = element("daysPast").value;
   var fullCallbackUrl = callbackBase;
   fullCallbackUrl += `project=${
     document.getElementById("project").value
