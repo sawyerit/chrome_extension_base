@@ -118,6 +118,11 @@ const domify = str => {
   return dom.body.textContent;
 };
 
+const errorMessage = error => {
+  status.innerHTML = "ERROR. " + error;
+  status.hidden = false;
+};
+
 var status = document.getElementById("status");
 async function checkProjectExists() {
   try {
@@ -126,9 +131,8 @@ async function checkProjectExists() {
       "json"
     );
     return result;
-  } catch (errorMessage) {
-    status.innerHTML = "ERROR. " + errorMessage;
-    status.hidden = false;
+  } catch (e) {
+    errorMessage(e);
   }
 }
 
@@ -158,10 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
               jsonResultDiv.innerHTML = return_val;
               jsonResultDiv.hidden = false;
             },
-            errorMessage => {
-              status.innerHTML = "ERROR. " + errorMessage;
-              status.hidden = false;
-            }
+            errorMessage
           );
         });
       };
@@ -169,46 +170,37 @@ document.addEventListener("DOMContentLoaded", () => {
       // activity feed click handler
       document.getElementById("feed").onclick = () => {
         // get the xml feed
-        getJIRAFeed(
-          (url, xmlDoc) => {
-            status.innerHTML = "Activity query: " + url + "\n";
-            status.hidden = false;
+        getJIRAFeed((url, xmlDoc) => {
+          status.innerHTML = "Activity query: " + url + "\n";
+          status.hidden = false;
 
-            // render result
-            var feed = xmlDoc.getElementsByTagName("feed");
-            var entries = feed[0].getElementsByTagName("entry");
-            var list = document.createElement("ul");
+          // render result
+          var feed = xmlDoc.getElementsByTagName("feed");
+          var entries = feed[0].getElementsByTagName("entry");
+          var list = document.createElement("ul");
 
-            for (var index = 0; index < entries.length; index++) {
-              var html = entries[index].getElementsByTagName("title")[0]
-                .innerHTML;
-              var updated = entries[index].getElementsByTagName("updated")[0]
-                .innerHTML;
-              var item = document.createElement("li");
-              item.innerHTML =
-                new Date(updated).toLocaleString() + " - " + domify(html);
-              list.appendChild(item);
-            }
+          for (var index = 0; index < entries.length; index++) {
+            var html = entries[index].getElementsByTagName("title")[0]
+              .innerHTML;
+            var updated = entries[index].getElementsByTagName("updated")[0]
+              .innerHTML;
+            var item = document.createElement("li");
+            item.innerHTML =
+              new Date(updated).toLocaleString() + " - " + domify(html);
+            list.appendChild(item);
+          }
 
-            var feedResultDiv = document.getElementById("query-result");
-            if (list.childNodes.length > 0) {
-              feedResultDiv.innerHTML = list.outerHTML;
-            } else {
-              status.innerHTML = "There are no activity results.";
-              status.hidden = false;
-            }
-
-            feedResultDiv.hidden = false;
-          },
-          errorMessage => {
-            status.innerHTML = "ERROR. " + errorMessage;
+          var feedResultDiv = document.getElementById("query-result");
+          if (list.childNodes.length > 0) {
+            feedResultDiv.innerHTML = list.outerHTML;
+          } else {
+            status.innerHTML = "There are no activity results.";
             status.hidden = false;
           }
-        );
+
+          feedResultDiv.hidden = false;
+        }, errorMessage);
       };
     })
-    .catch(function(errorMessage) {
-      status.innerHTML = "ERROR. " + errorMessage;
-      status.hidden = false;
-    });
+    .catch(errorMessage);
 });
