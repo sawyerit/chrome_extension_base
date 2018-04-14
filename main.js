@@ -86,13 +86,16 @@ function buildJQL(callback) {
 }
 
 function createHTMLElementResult(response) {
+  var issues = response["issues"];
+  var results = issues.map(issue => {
+    return "<p>" + issue["fields"]["summary"] + "</p>";
+  });
+  return results;
   //
   // Create HTML output to display the search results.
   // results.json in the "json_results" folder contains a sample of the API response
   // hint: you may run the application as well if you fix the bug.
   //
-
-  return "<p>There may be results, but you must read the response and display them.</p>";
 }
 
 // utility
