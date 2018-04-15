@@ -25,7 +25,7 @@ const getJIRAFeed = (callback, errorCallback) => {
 async function getQueryResults(s, callback, errorCallback) {
   try {
     var response = await make_request(s, "json");
-    callback(createHTMLElementResult(response));
+    callback(formatTicketStatusQueryResults(response));
   } catch (error) {
     errorCallback(error);
   }
@@ -90,7 +90,7 @@ const buildJQL = callback => {
   callback(fullCallbackUrl);
 };
 
-function createHTMLElementResult(response) {
+function formatTicketStatusQueryResults(response) {
   var issues = response["issues"];
   var count = response["total"];
   var results = issues.map(issue => {
@@ -137,6 +137,30 @@ async function checkProjectExists() {
   }
 }
 
+const queryClickHandler = () => {
+  document.getElementById("query").onclick = () => {
+    // build query
+    buildJQL(url => {
+      status.innerHTML = "Performing JIRA search for " + url;
+      status.hidden = false;
+      // perform the search
+      getQueryResults(
+        url,
+        return_val => {
+          // render the results
+          status.innerHTML = "Query term: " + url + "\n";
+          status.hidden = false;
+
+          var jsonResultDiv = document.getElementById("query-result");
+          jsonResultDiv.innerHTML = return_val;
+          jsonResultDiv.hidden = false;
+        },
+        errorMessage
+      );
+    });
+  };
+};
+
 // Setup
 document.addEventListener("DOMContentLoaded", () => {
   // if logged in, setup listeners
@@ -144,29 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(() => {
       //load saved options
       loadOptions();
-
-      // query click handler
-      document.getElementById("query").onclick = () => {
-        // build query
-        buildJQL(url => {
-          status.innerHTML = "Performing JIRA search for " + url;
-          status.hidden = false;
-          // perform the search
-          getQueryResults(
-            url,
-            return_val => {
-              // render the results
-              status.innerHTML = "Query term: " + url + "\n";
-              status.hidden = false;
-
-              var jsonResultDiv = document.getElementById("query-result");
-              jsonResultDiv.innerHTML = return_val;
-              jsonResultDiv.hidden = false;
-            },
-            errorMessage
-          );
-        });
-      };
+      queryClickHandler();
 
       // activity feed click handler
       document.getElementById("feed").onclick = () => {

@@ -444,3 +444,11 @@ th {
 .card-container {
   padding: 2px 16px;
 }
+
+#query-result li {
+  white-space: normal;
+  float: left;
+  width: 100%;
+  height: auto;
+  word-wrap: break-word;
+}
