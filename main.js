@@ -96,7 +96,7 @@ function createHTMLElementResult(response) {
   var results = issues.map(issue => {
     return (
       "<div class='card'><div class='card-container'>" +
-      `<h6>ID: ${issue["id"]} | Key: ${issue["key"]}</h6>` +
+      `<h6>Issue ID: ${issue["id"]} | Key: ${issue["key"]}</h6>` +
       `<img src='${issue["fields"]["status"]["iconUrl"]}' /> ` +
       issue["fields"]["status"]["name"] +
       ": " +
@@ -104,7 +104,10 @@ function createHTMLElementResult(response) {
       "</div></div><br/>"
     );
   });
-  return `<h5>Total Count: ${count}<br/></h5>` + results.join("");
+  return (
+    `<h6>Ticket Status Query Results<br/><i>Total Count: ${count}</i></h6>` +
+    results.join("")
+  );
 }
 
 // utility
@@ -190,7 +193,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
           var feedResultDiv = document.getElementById("query-result");
           if (list.childNodes.length > 0) {
-            feedResultDiv.innerHTML = list.outerHTML;
+            feedResultDiv.innerHTML =
+              "<h6>JIRA Activity Feed Results</h6>" + list.outerHTML;
           } else {
             status.innerHTML = "There are no activity results.";
             status.hidden = false;
