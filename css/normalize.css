@@ -456,3 +456,14 @@ th {
 .second-break {
   margin: 0px;
 }
+
+#status {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  white-space: normal;
+  float: left;
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  word-wrap: break-word;
+}

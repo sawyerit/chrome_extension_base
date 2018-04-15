@@ -62,7 +62,6 @@ const make_request = (url, responseType) => {
     };
 
     handleNetworkError(req);
-
     req.send();
   });
 };
@@ -116,6 +115,9 @@ const errorMessage = error => {
   var status = document.getElementById("status");
   status.innerHTML = "ERROR: " + error;
   status.hidden = false;
+  var feedResultDiv = document.getElementById("query-result");
+  feedResultDiv.innerHTML = "";
+  feedResultDiv.hidden = true;
 };
 
 async function checkProjectExists() {
@@ -177,6 +179,8 @@ const renderActivityFeedResults = (feed, entries, list) => {
   } else {
     status.innerHTML = "There are no activity results.";
     status.hidden = false;
+    feedResultDiv.innerHTML = "";
+    feedResultDiv.hidden = true;
   }
 
   feedResultDiv.hidden = false;
