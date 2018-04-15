@@ -112,21 +112,12 @@ function formatTicketStatusQueryResults(response) {
   );
 }
 
-// utility
-const domify = str => {
-  var dom = new DOMParser().parseFromString(
-    "<!doctype html><body>" + str,
-    "text/html"
-  );
-  return dom.body.textContent;
-};
-
 const errorMessage = error => {
-  status.innerHTML = "ERROR. " + error;
+  var status = document.getElementById("status");
+  status.innerHTML = "ERROR: " + error;
   status.hidden = false;
 };
 
-var status = document.getElementById("status");
 async function checkProjectExists() {
   try {
     var result = await make_request(
@@ -140,16 +131,14 @@ async function checkProjectExists() {
 }
 
 const ticketQueryClickHandler = () => {
+  var status = document.getElementById("status");
   document.getElementById("query").onclick = () => {
-    // build query
     buildJQL(url => {
       status.innerHTML = "Performing JIRA search for " + url;
       status.hidden = false;
-      // perform the search
       getQueryResults(
         url,
         return_val => {
-          // render the results
           status.innerHTML = "Query term: " + url + "\n";
           status.hidden = false;
 
@@ -163,48 +152,54 @@ const ticketQueryClickHandler = () => {
   };
 };
 
+const domify = str => {
+  var dom = new DOMParser().parseFromString(
+    "<!doctype html><body>" + str,
+    "text/html"
+  );
+  return dom.body.textContent;
+};
+
+const renderActivityFeedResults = (feed, entries, list) => {
+  var status = document.getElementById("status");
+  for (var i = 0; i < entries.length; i++) {
+    var html = entries[i].getElementsByTagName("title")[0].innerHTML;
+    var updated = entries[i].getElementsByTagName("updated")[0].innerHTML;
+    var item = document.createElement("li");
+    item.innerHTML = new Date(updated).toLocaleString() + " - " + domify(html);
+    list.appendChild(item);
+  }
+
+  var feedResultDiv = document.getElementById("query-result");
+  if (list.childNodes.length > 0) {
+    feedResultDiv.innerHTML =
+      "<h6><b>JIRA Activity Feed Results</b></h6>" + list.outerHTML;
+  } else {
+    status.innerHTML = "There are no activity results.";
+    status.hidden = false;
+  }
+
+  feedResultDiv.hidden = false;
+};
+
 const activityFeedClickHandler = () => {
   document.getElementById("feed").onclick = () => {
-    // get the xml feed
     getJIRAFeed((url, xmlDoc) => {
       status.innerHTML = "Activity query: " + url + "\n";
       status.hidden = false;
 
-      // render result
       var feed = xmlDoc.getElementsByTagName("feed");
       var entries = feed[0].getElementsByTagName("entry");
       var list = document.createElement("ul");
 
-      for (var index = 0; index < entries.length; index++) {
-        var html = entries[index].getElementsByTagName("title")[0].innerHTML;
-        var updated = entries[index].getElementsByTagName("updated")[0]
-          .innerHTML;
-        var item = document.createElement("li");
-        item.innerHTML =
-          new Date(updated).toLocaleString() + " - " + domify(html);
-        list.appendChild(item);
-      }
-
-      var feedResultDiv = document.getElementById("query-result");
-      if (list.childNodes.length > 0) {
-        feedResultDiv.innerHTML =
-          "<h6><b>JIRA Activity Feed Results</b></h6>" + list.outerHTML;
-      } else {
-        status.innerHTML = "There are no activity results.";
-        status.hidden = false;
-      }
-
-      feedResultDiv.hidden = false;
+      renderActivityFeedResults(feed, entries, list);
     }, errorMessage);
   };
 };
 
-// Setup
 document.addEventListener("DOMContentLoaded", () => {
-  // if logged in, setup listeners
   checkProjectExists()
     .then(() => {
-      //load saved options
       loadOptions();
       ticketQueryClickHandler();
       activityFeedClickHandler();
