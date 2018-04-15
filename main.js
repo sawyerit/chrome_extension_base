@@ -31,6 +31,17 @@ async function getQueryResults(s, callback, errorCallback) {
   }
 }
 
+const handleNetworkError = req => {
+  req.onerror = () => {
+    reject(Error("Network Error"));
+  };
+  req.onreadystatechange = () => {
+    if (req.readyState == 4 && req.status == 401) {
+      reject("You must be logged in to JIRA to see this project.");
+    }
+  };
+};
+
 const make_request = (url, responseType) => {
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
@@ -50,17 +61,8 @@ const make_request = (url, responseType) => {
       resolve(response);
     };
 
-    // Handle network errors
-    req.onerror = () => {
-      reject(Error("Network Error"));
-    };
-    req.onreadystatechange = () => {
-      if (req.readyState == 4 && req.status == 401) {
-        reject("You must be logged in to JIRA to see this project.");
-      }
-    };
+    handleNetworkError(req);
 
-    // Make the request
     req.send();
   });
 };
@@ -137,7 +139,7 @@ async function checkProjectExists() {
   }
 }
 
-const queryClickHandler = () => {
+const ticketQueryClickHandler = () => {
   document.getElementById("query").onclick = () => {
     // build query
     buildJQL(url => {
@@ -161,6 +163,42 @@ const queryClickHandler = () => {
   };
 };
 
+const activityFeedClickHandler = () => {
+  document.getElementById("feed").onclick = () => {
+    // get the xml feed
+    getJIRAFeed((url, xmlDoc) => {
+      status.innerHTML = "Activity query: " + url + "\n";
+      status.hidden = false;
+
+      // render result
+      var feed = xmlDoc.getElementsByTagName("feed");
+      var entries = feed[0].getElementsByTagName("entry");
+      var list = document.createElement("ul");
+
+      for (var index = 0; index < entries.length; index++) {
+        var html = entries[index].getElementsByTagName("title")[0].innerHTML;
+        var updated = entries[index].getElementsByTagName("updated")[0]
+          .innerHTML;
+        var item = document.createElement("li");
+        item.innerHTML =
+          new Date(updated).toLocaleString() + " - " + domify(html);
+        list.appendChild(item);
+      }
+
+      var feedResultDiv = document.getElementById("query-result");
+      if (list.childNodes.length > 0) {
+        feedResultDiv.innerHTML =
+          "<h6>JIRA Activity Feed Results</h6>" + list.outerHTML;
+      } else {
+        status.innerHTML = "There are no activity results.";
+        status.hidden = false;
+      }
+
+      feedResultDiv.hidden = false;
+    }, errorMessage);
+  };
+};
+
 // Setup
 document.addEventListener("DOMContentLoaded", () => {
   // if logged in, setup listeners
@@ -168,43 +206,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(() => {
       //load saved options
       loadOptions();
-      queryClickHandler();
-
-      // activity feed click handler
-      document.getElementById("feed").onclick = () => {
-        // get the xml feed
-        getJIRAFeed((url, xmlDoc) => {
-          status.innerHTML = "Activity query: " + url + "\n";
-          status.hidden = false;
-
-          // render result
-          var feed = xmlDoc.getElementsByTagName("feed");
-          var entries = feed[0].getElementsByTagName("entry");
-          var list = document.createElement("ul");
-
-          for (var index = 0; index < entries.length; index++) {
-            var html = entries[index].getElementsByTagName("title")[0]
-              .innerHTML;
-            var updated = entries[index].getElementsByTagName("updated")[0]
-              .innerHTML;
-            var item = document.createElement("li");
-            item.innerHTML =
-              new Date(updated).toLocaleString() + " - " + domify(html);
-            list.appendChild(item);
-          }
-
-          var feedResultDiv = document.getElementById("query-result");
-          if (list.childNodes.length > 0) {
-            feedResultDiv.innerHTML =
-              "<h6>JIRA Activity Feed Results</h6>" + list.outerHTML;
-          } else {
-            status.innerHTML = "There are no activity results.";
-            status.hidden = false;
-          }
-
-          feedResultDiv.hidden = false;
-        }, errorMessage);
-      };
+      ticketQueryClickHandler();
+      activityFeedClickHandler();
     })
     .catch(errorMessage);
 });
