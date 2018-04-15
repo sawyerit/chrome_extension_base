@@ -107,7 +107,7 @@ function formatTicketStatusQueryResults(response) {
     );
   });
   return (
-    `<h6>Ticket Status Query Results<br/><i>Total Count: ${count}</i></h6>` +
+    `<h6><b>Ticket Status Query Results</b><br/>Total Count: ${count}</h6>` +
     results.join("")
   );
 }
@@ -188,7 +188,7 @@ const activityFeedClickHandler = () => {
       var feedResultDiv = document.getElementById("query-result");
       if (list.childNodes.length > 0) {
         feedResultDiv.innerHTML =
-          "<h6>JIRA Activity Feed Results</h6>" + list.outerHTML;
+          "<h6><b>JIRA Activity Feed Results</b></h6>" + list.outerHTML;
       } else {
         status.innerHTML = "There are no activity results.";
         status.hidden = false;

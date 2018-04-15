@@ -452,3 +452,7 @@ th {
   height: auto;
   word-wrap: break-word;
 }
+
+.second-break {
+  margin: 0px;
+}
