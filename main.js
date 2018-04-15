@@ -1,20 +1,3 @@
-const element = id => {
-  return document.getElementById(id);
-};
-
-const getJIRAFeed = (callback, errorCallback) => {
-  if (element("user").value == undefined) return;
-
-  var url =
-    "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+" +
-    element("user").value +
-    "&providers=issues";
-  make_request(url, "").then(response => {
-    // empty response type allows the request.responseXML property to be returned in the makeRequest call
-    callback(url, response);
-  }, errorCallback);
-};
-
 /**
  * @param {string} searchTerm - Search term for JIRA Query.
  * @param {function(string)} callback - Called when the query results have been
@@ -22,25 +5,7 @@ const getJIRAFeed = (callback, errorCallback) => {
  * @param {function(string)} errorCallback - Called when the query or call fails.
  */
 
-async function getQueryResults(s, callback, errorCallback) {
-  try {
-    var response = await make_request(s, "json");
-    callback(formatTicketStatusQueryResults(response));
-  } catch (error) {
-    errorCallback(error);
-  }
-}
-
-const handleNetworkError = req => {
-  req.onerror = () => {
-    reject(Error("Network Error"));
-  };
-  req.onreadystatechange = () => {
-    if (req.readyState == 4 && req.status == 401) {
-      reject("You must be logged in to JIRA to see this project.");
-    }
-  };
-};
+// Network Request & Utility Functions
 
 const make_request = (url, responseType) => {
   return new Promise((resolve, reject) => {
@@ -66,6 +31,40 @@ const make_request = (url, responseType) => {
   });
 };
 
+const handleNetworkError = req => {
+  req.onerror = () => {
+    reject(Error("Network Error"));
+  };
+  req.onreadystatechange = () => {
+    if (req.readyState == 4 && req.status == 401) {
+      reject("You must be logged in to JIRA to see this project.");
+    }
+  };
+};
+
+async function checkProjectExists() {
+  try {
+    var result = await make_request(
+      "https://jira.secondlife.com/rest/api/2/project/SUN",
+      "json"
+    );
+    return result;
+  } catch (e) {
+    errorMessage(e);
+  }
+}
+
+const element = id => {
+  return document.getElementById(id);
+};
+
+const errorMessage = error => {
+  var status = element("status");
+  status.innerHTML = "ERROR: " + error;
+  status.hidden = false;
+  clearResultsDisplay();
+};
+
 const loadOptions = () => {
   chrome.storage.sync.get(
     {
@@ -79,19 +78,23 @@ const loadOptions = () => {
   );
 };
 
-const buildJQL = callback => {
-  var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
-  var project = element("project").value;
-  var status = element("statusSelect").value;
-  var inStatusFor = element("daysPast").value;
-  var fullCallbackUrl = callbackBase;
-  fullCallbackUrl += `project=${
-    document.getElementById("project").value
-  }+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
-  callback(fullCallbackUrl);
+const domify = str => {
+  var dom = new DOMParser().parseFromString(
+    "<!doctype html><body>" + str,
+    "text/html"
+  );
+  return dom.body.textContent;
 };
 
-function formatTicketStatusQueryResults(response) {
+const clearResultsDisplay = () => {
+  var queryResultElement = element("query-result");
+  queryResultElement.innerHTML = "";
+  queryResultElement.hidden = true;
+};
+
+// Ticket Status Query Functions
+
+const formatTicketStatusQueryResults = response => {
   var issues = response["issues"];
   var count = response["total"];
   var results = issues.map(issue => {
@@ -109,44 +112,42 @@ function formatTicketStatusQueryResults(response) {
     `<h6><b>Ticket Status Query Results</b><br/>Total Count: ${count}</h6>` +
     results.join("")
   );
-}
-
-const errorMessage = error => {
-  var status = document.getElementById("status");
-  status.innerHTML = "ERROR: " + error;
-  status.hidden = false;
-  var feedResultDiv = document.getElementById("query-result");
-  feedResultDiv.innerHTML = "";
-  feedResultDiv.hidden = true;
 };
 
-async function checkProjectExists() {
+const buildJQLForTicketStatusQuery = callback => {
+  var callbackBase = "https://jira.secondlife.com/rest/api/2/search?jql=";
+  var project = element("project").value;
+  var status = element("statusSelect").value;
+  var inStatusFor = element("daysPast").value;
+  var fullCallbackUrl = callbackBase;
+  fullCallbackUrl += `project=${project}+and+status=${status}+and+status+changed+to+${status}+before+-${inStatusFor}d&fields=id,status,key,assignee,summary&maxresults=100`;
+  callback(fullCallbackUrl);
+};
+
+async function getQueryResults(s, callback, errorCallback) {
   try {
-    var result = await make_request(
-      "https://jira.secondlife.com/rest/api/2/project/SUN",
-      "json"
-    );
-    return result;
-  } catch (e) {
-    errorMessage(e);
+    var response = await make_request(s, "json");
+    callback(formatTicketStatusQueryResults(response));
+  } catch (error) {
+    errorCallback(error);
   }
 }
 
 const ticketQueryClickHandler = () => {
-  var status = document.getElementById("status");
-  document.getElementById("query").onclick = () => {
-    buildJQL(url => {
+  var status = element("status");
+  element("query").onclick = () => {
+    buildJQLForTicketStatusQuery(url => {
       status.innerHTML = "Performing JIRA search for " + url;
       status.hidden = false;
       getQueryResults(
         url,
         return_val => {
-          status.innerHTML = "Query term: " + url + "\n";
+          status.innerHTML = "<i>Query term: " + url + "</i>\n";
           status.hidden = false;
 
-          var jsonResultDiv = document.getElementById("query-result");
-          jsonResultDiv.innerHTML = return_val;
-          jsonResultDiv.hidden = false;
+          var queryResultDiv = document.getElementById("query-result");
+          queryResultDiv.innerHTML = return_val;
+          queryResultDiv.hidden = false;
         },
         errorMessage
       );
@@ -154,16 +155,23 @@ const ticketQueryClickHandler = () => {
   };
 };
 
-const domify = str => {
-  var dom = new DOMParser().parseFromString(
-    "<!doctype html><body>" + str,
-    "text/html"
-  );
-  return dom.body.textContent;
+// JIRA Activity Feed Query Functions
+
+const getJIRAFeed = (callback, errorCallback) => {
+  if (element("user").value == undefined) return;
+
+  var url =
+    "https://jira.secondlife.com/activity?maxResults=50&streams=user+IS+" +
+    element("user").value +
+    "&providers=issues";
+  make_request(url, "").then(response => {
+    // empty response type allows the request.responseXML property
+    // to be returned in the makeRequest call
+    callback(url, response);
+  }, errorCallback);
 };
 
-const renderActivityFeedResults = (feed, entries, list) => {
-  var status = document.getElementById("status");
+const buildActivityFeedDisplayList = (entries, list) => {
   for (var i = 0; i < entries.length; i++) {
     var html = entries[i].getElementsByTagName("title")[0].innerHTML;
     var updated = entries[i].getElementsByTagName("updated")[0].innerHTML;
@@ -171,35 +179,42 @@ const renderActivityFeedResults = (feed, entries, list) => {
     item.innerHTML = new Date(updated).toLocaleString() + " - " + domify(html);
     list.appendChild(item);
   }
+};
 
-  var feedResultDiv = document.getElementById("query-result");
+const renderActivityFeedResults = entries => {
+  var list = document.createElement("ul");
+  buildActivityFeedDisplayList(entries, list);
+  var status = element("status");
+
   if (list.childNodes.length > 0) {
-    feedResultDiv.innerHTML =
+    element("query-result").innerHTML =
       "<h6><b>JIRA Activity Feed Results</b></h6>" + list.outerHTML;
+    status.innerHTML = "";
+    status.hidden = true;
   } else {
     status.innerHTML = "There are no activity results.";
     status.hidden = false;
-    feedResultDiv.innerHTML = "";
-    feedResultDiv.hidden = true;
+    clearResultsDisplay();
   }
 
-  feedResultDiv.hidden = false;
+  element("query-result").hidden = false;
 };
 
 const activityFeedClickHandler = () => {
-  document.getElementById("feed").onclick = () => {
+  element("feed").onclick = () => {
     getJIRAFeed((url, xmlDoc) => {
       status.innerHTML = "Activity query: " + url + "\n";
       status.hidden = false;
 
       var feed = xmlDoc.getElementsByTagName("feed");
       var entries = feed[0].getElementsByTagName("entry");
-      var list = document.createElement("ul");
 
-      renderActivityFeedResults(feed, entries, list);
+      renderActivityFeedResults(entries);
     }, errorMessage);
   };
 };
+
+// Build the Extension Display Page
 
 document.addEventListener("DOMContentLoaded", () => {
   checkProjectExists()
