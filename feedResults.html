@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-
         <meta charset="utf-8">
         <title>JIRA Quick Search</title>
         <meta name="description" content="">
@@ -15,25 +14,27 @@
         <link rel="stylesheet" href="css/skeleton.css">
         <link rel="icon" type="image/png" href="images/favicon.png">
 
-        <script src="options.js"></script>
+        <script src="utils.js"></script>
+        <script src="feedResults.js"></script>
 
     </head>
     <body>
         <div class="container">
-            <div class="row">
-                <div class="one-half column" style="margin-top: 5%">
-                    <h4>JIRA Search Options</h4>
-                    <p>
-                    <input type="text" placeholder="enter a project" id="project" />
-                    <input type="text" placeholder="enter a user" id="user" />
-                    <br/>
-                    <button id="save" class="button-primary">save</button>
-                    </p>
-                    <p>
-                    <code id="status" hidden></code>
-                    </p>
-                </div>
+            <div class="row" style="margin-top: 5%">
+                <h4>JIRA Feed Results</h4>
+                <p><span id="status" hidden /></p>
+                <table class="u-full-width">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Summary</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-body">
+                    </tbody>
+                </table>
             </div>
+            <div id ="query-result"></div>
         </div>
     </body>
 </html>
