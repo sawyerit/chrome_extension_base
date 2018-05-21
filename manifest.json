@@ -7,7 +7,7 @@
   "options_page": "options.html",
   "browser_action": {
     "default_icon": "images/favicon.png",
-    "default_popup": "main.html",
+    "default_popup": "popup.html",
     "default_title": "Metrics Activity for JIRA"
   },
   "permissions": [

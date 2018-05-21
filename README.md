@@ -1,6 +1,16 @@
 # JIRA Chrome extension
 A chrome extension that queries a public JIRA API (https://jira.secondlife.com).  This is a fully functional chrome extension with a bug, some display issues, and generally some bad practices.  
 
+## Solution Explination
+- First, thanks for testing me on my weakest of skills :-D, thankfully I have done some work in extensions before.
+- I prefer not to use the popup for _everything_, rather, it ought to be used only for input or display of general non-solicited information.
+- We can incorporate any number of frameworks to help us build the extension, however, the scope of this ext is small, so probably overkill.
+- The popup should spawn new tabs with query results for clarity, and expanded viewing.
+- Pass arguments needed to each as query params.
+
+## Misc Info
+Time: ~4h
+
 ## Expectations
 
 **Your task is to make it production ready, make it easy for someone else to consume, and generally improve upon the code how you see fit.**
